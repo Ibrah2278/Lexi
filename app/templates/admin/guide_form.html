@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if guide %}Modifier le guide{% else %}Nouveau guide{% endif %} | EllesAid Admin
+{% endblock %}
+
+{% block header_title %}
+    {% if guide %}Modifier un guide{% else %}Ajouter un guide{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+    <h2 class="page-title" style="margin: 0;">
+        {% if guide %}Modifier le guide{% else %}Nouveau guide{% endif %}
+    </h2>
+    <a href="/admin/guides" class="btn btn-secondary">← Retour à la liste</a>
+</div>
+
+<div class="card">
+    <form
+        action="{% if guide %}/admin/guides/{{ guide.id }}/update{% else %}/admin/guides/create{% endif %}"
+        method="POST"
+    >
+
+        <div class="form-group">
+            <label for="title">Titre du guide</label>
+            <input
+                type="text"
+                id="title"
+                name="title"
+                class="form-control"
+                placeholder="Ex: Que faire en cas de violence domestique ?"
+                value="{{ guide.title if guide else '' }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="case_type">Type de cas</label>
+            <select id="case_type" name="case_type" class="form-control" required>
+                <option value="">-- Choisir un type --</option>
+                <option value="violence" {% if guide and guide.case_type == "violence" %}selected{% endif %}>Violence</option>
+                <option value="harcelement" {% if guide and guide.case_type == "harcelement" %}selected{% endif %}>Harcèlement</option>
+                <option value="abus" {% if guide and guide.case_type == "abus" %}selected{% endif %}>Abus</option>
+                <option value="litiges" {% if guide and guide.case_type == "litiges" %}selected{% endif %}>Litiges</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="content">Contenu du guide</label>
+            <textarea
+                id="content"
+                name="content"
+                class="form-control"
+                placeholder="Rédige ici les étapes, conseils et informations pratiques..."
+                required
+            >{{ guide.content if guide else '' }}</textarea>
+        </div>
+
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 25px;">
+            <button type="submit" class="btn btn-primary">
+                {% if guide %}💾 Enregistrer les modifications{% else %}➕ Ajouter le guide{% endif %}
+            </button>
+
+            <a href="/admin/guides" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

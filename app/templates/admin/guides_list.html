@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Guides | EllesAid Admin{% endblock %}
+{% block header_title %}Gestion des guides{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+    <h2 class="page-title" style="margin: 0;">Liste des guides</h2>
+    <a href="/admin/guides/new" class="btn btn-primary">➕ Nouveau guide</a>
+</div>
+
+<div class="card">
+    {% if guides %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Titre</th>
+                    <th>Type de cas</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for guide in guides %}
+                <tr>
+                    <td>{{ guide.id }}</td>
+                    <td>{{ guide.title }}</td>
+                    <td style="text-transform: capitalize;">{{ guide.case_type }}</td>
+                    <td>{{ guide.created_at.strftime('%d/%m/%Y') if guide.created_at else '-' }}</td>
+                    <td>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <a href="/admin/guides/{{ guide.id }}/edit" class="btn btn-secondary">Modifier</a>
+
+                            <form action="/admin/guides/{{ guide.id }}/delete" method="POST" style="display: inline;">
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('Supprimer ce guide ?')">
+                                    Supprimer
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="color: #777;">Aucun guide disponible pour le moment.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

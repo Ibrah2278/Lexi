@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if article %}Modifier l'article{% else %}Nouvel article{% endif %} | EllesAid Admin
+{% endblock %}
+
+{% block header_title %}
+    {% if article %}Modifier un article{% else %}Ajouter un article{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+    <h2 class="page-title" style="margin: 0;">
+        {% if article %}Modifier l'article{% else %}Nouvel article{% endif %}
+    </h2>
+    <a href="/admin/articles" class="btn btn-secondary">← Retour à la liste</a>
+</div>
+
+<div class="card">
+    <form
+        action="{% if article %}/admin/articles/{{ article.id }}/update{% else %}/admin/articles/create{% endif %}"
+        method="POST"
+    >
+
+        <div class="form-group">
+            <label for="title">Titre de l’article</label>
+            <input
+                type="text"
+                id="title"
+                name="title"
+                class="form-control"
+                placeholder="Ex: Les droits de la femme en cas de violence domestique"
+                value="{{ article.title if article else '' }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="category">Catégorie</label>
+            <select id="category" name="category" class="form-control" required>
+                <option value="">-- Choisir une catégorie --</option>
+                <option value="femme" {% if article and article.category == "femme" %}selected{% endif %}>Femme</option>
+                <option value="enfant" {% if article and article.category == "enfant" %}selected{% endif %}>Enfant</option>
+                <option value="famille" {% if article and article.category == "famille" %}selected{% endif %}>Famille</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="content">Contenu</label>
+            <textarea
+                id="content"
+                name="content"
+                class="form-control"
+                placeholder="Rédige ici le contenu complet de l’article..."
+                required
+            >{{ article.content if article else '' }}</textarea>
+        </div>
+
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 25px;">
+            <button type="submit" class="btn btn-primary">
+                {% if article %}💾 Enregistrer les modifications{% else %}➕ Ajouter l’article{% endif %}
+            </button>
+
+            <a href="/admin/articles" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,85 +1,178 @@
 from datetime import datetime
-from app.extensions import db
+from .extensions import db, bcrypt
 
+
+# =========================================================
+# USER
+# =========================================================
 class User(db.Model):
-    __tablename__ = 'users'
-    
+    __tablename__ = "users"
+
     id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(50), nullable=False)
-    last_name = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(100), nullable=False, unique=True)
-    phone = db.Column(db.String(20))
-    password_hash = db.Column(db.String(255), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    litiges = db.relationship('Litige', backref='user', cascade="all, delete-orphan")
-    chat_history = db.relationship('ChatHistory', backref='user', cascade="all, delete-orphan")
-    rdv_avocat = db.relationship('RdvAvocat', backref='user', cascade="all, delete-orphan")
+
+    # Relations
+    favorites = db.relationship("Favorite", backref="user", lazy=True, cascade="all, delete-orphan")
+    search_history = db.relationship("SearchHistory", backref="user", lazy=True, cascade="all, delete-orphan")
+
+    def set_password(self, raw_password):
+        self.password = bcrypt.generate_password_hash(raw_password).decode("utf-8")
+
+    def check_password(self, raw_password):
+        return bcrypt.check_password_hash(self.password, raw_password)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+    def __repr__(self):
+        return f"<User {self.email}>"
 
 
-class Litige(db.Model):
-    __tablename__ = 'litiges'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    title = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text)
-    status = db.Column(db.Enum('en cours', 'résolu', 'en attente'), default='en cours')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    chat_history = db.relationship('ChatHistory', backref='litige', cascade="all, delete-orphan")
-    rdv_avocat = db.relationship('RdvAvocat', backref='litige', cascade="all, delete-orphan")
+# =========================================================
+# ARTICLE
+# =========================================================
+class Article(db.Model):
+    __tablename__ = "articles"
 
-
-class ArticleDroit(db.Model):
-    __tablename__ = 'articles_droit'
-    
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    category = db.Column(db.String(100))
+    category = db.Column(
+        db.Enum("femme", "enfant", "famille", name="article_categories"),
+        nullable=False
+    )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self, include_content=True):
+        data = {
+            "id": self.id,
+            "title": self.title,
+            "category": self.category,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+        if include_content:
+            data["content"] = self.content
+        return data
+
+    def __repr__(self):
+        return f"<Article {self.title}>"
 
 
-class ChatHistory(db.Model):
-    __tablename__ = 'chat_history'
-    
+# =========================================================
+# GUIDE
+# =========================================================
+class Guide(db.Model):
+    __tablename__ = "guides"
+
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    litige_id = db.Column(db.Integer, db.ForeignKey('litiges.id', ondelete='SET NULL'))
-    message = db.Column(db.Text, nullable=False)
-    sender = db.Column(db.Enum('user','bot'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    case_type = db.Column(
+        db.Enum("violence", "harcelement", "abus", "litiges", name="guide_case_types"),
+        nullable=False
+    )
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def to_dict(self, include_content=True):
+        data = {
+            "id": self.id,
+            "title": self.title,
+            "case_type": self.case_type,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+        if include_content:
+            data["content"] = self.content
+        return data
 
-class Avocat(db.Model):
-    __tablename__ = 'avocats'
-    
+    def __repr__(self):
+        return f"<Guide {self.title}>"
+
+
+# =========================================================
+# CONTACT
+# =========================================================
+class Contact(db.Model):
+    __tablename__ = "contacts"
+
     id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(50), nullable=False)
-    last_name = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(100), nullable=False)
-    phone = db.Column(db.String(20))
-    speciality = db.Column(db.String(100))
-    rating = db.Column(db.Float, default=0)
-    available = db.Column(db.Boolean, default=True)
+    name = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(100), nullable=False)  # Avocat / ONG / Association
+    email = db.Column(db.String(100), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
+    address = db.Column(db.String(255), nullable=True)
+    specialty = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    rdv_avocat = db.relationship('RdvAvocat', backref='avocat', cascade="all, delete-orphan")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "role": self.role,
+            "email": self.email,
+            "phone": self.phone,
+            "address": self.address,
+            "specialty": self.specialty,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+    def __repr__(self):
+        return f"<Contact {self.name}>"
 
 
-class RdvAvocat(db.Model):
-    __tablename__ = 'rdv_avocat'
-    
+# =========================================================
+# FAVORITE
+# =========================================================
+class Favorite(db.Model):
+    __tablename__ = "favorites"
+
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    avocat_id = db.Column(db.Integer, db.ForeignKey('avocats.id', ondelete='CASCADE'), nullable=False)
-    litige_id = db.Column(db.Integer, db.ForeignKey('litiges.id', ondelete='CASCADE'), nullable=False)
-    date_rdv = db.Column(db.DateTime, nullable=False)
-    status = db.Column(db.Enum('planifié','réalisé','annulé'), default='planifié')
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    type = db.Column(
+        db.Enum("article", "guide", "contact", name="favorite_types"),
+        nullable=False
+    )
+    item_id = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "type": self.type,
+            "item_id": self.item_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+    def __repr__(self):
+        return f"<Favorite {self.type}:{self.item_id}>"
+
+
+# =========================================================
+# SEARCH HISTORY
+# =========================================================
+class SearchHistory(db.Model):
+    __tablename__ = "search_history"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    query = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "query": self.query,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+    def __repr__(self):
+        return f"<SearchHistory {self.query}>"

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if contact %}Modifier le contact{% else %}Nouveau contact{% endif %} | EllesAid Admin
+{% endblock %}
+
+{% block header_title %}
+    {% if contact %}Modifier un contact{% else %}Ajouter un contact{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+    <h2 class="page-title" style="margin: 0;">
+        {% if contact %}Modifier le contact{% else %}Nouveau contact{% endif %}
+    </h2>
+    <a href="/admin/contacts" class="btn btn-secondary">← Retour à la liste</a>
+</div>
+
+<div class="card">
+    <form
+        action="{% if contact %}/admin/contacts/{{ contact.id }}/update{% else %}/admin/contacts/create{% endif %}"
+        method="POST"
+    >
+
+        <div class="form-group">
+            <label for="name">Nom</label>
+            <input
+                type="text"
+                id="name"
+                name="name"
+                class="form-control"
+                placeholder="Ex: Association Femmes Debout"
+                value="{{ contact.name if contact else '' }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="role">Rôle / Type</label>
+            <input
+                type="text"
+                id="role"
+                name="role"
+                class="form-control"
+                placeholder="Ex: ONG, Avocat, Association"
+                value="{{ contact.role if contact else '' }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-control"
+                placeholder="Ex: contact@organisation.org"
+                value="{{ contact.email if contact else '' }}"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="phone">Téléphone</label>
+            <input
+                type="text"
+                id="phone"
+                name="phone"
+                class="form-control"
+                placeholder="Ex: +227 90 00 00 00"
+                value="{{ contact.phone if contact else '' }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="address">Adresse</label>
+            <input
+                type="text"
+                id="address"
+                name="address"
+                class="form-control"
+                placeholder="Ex: Niamey, Plateau, près du tribunal"
+                value="{{ contact.address if contact else '' }}"
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="specialty">Spécialité</label>
+            <input
+                type="text"
+                id="specialty"
+                name="specialty"
+                class="form-control"
+                placeholder="Ex: Violence conjugale, droit familial, protection de l’enfant"
+                value="{{ contact.specialty if contact else '' }}"
+            >
+        </div>
+
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 25px;">
+            <button type="submit" class="btn btn-primary">
+                {% if contact %}💾 Enregistrer les modifications{% else %}➕ Ajouter le contact{% endif %}
+            </button>
+
+            <a href="/admin/contacts" class="btn btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
